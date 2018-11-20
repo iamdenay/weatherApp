@@ -18,7 +18,8 @@ import kotlinx.android.synthetic.main.fragment_city.*
 import java.util.*
 import android.location.Geocoder
 import java.io.IOException
-
+import com.miguelcatalan.materialsearchview.MaterialSearchView
+import com.example.iamde.kotlinproject.R.id.searchView
 
 class CityFragment : Fragment() {
     private lateinit var locationManager : LocationManager
@@ -26,6 +27,7 @@ class CityFragment : Fragment() {
     private var latitude = 16.20
     private var longitude = 33.34
     private var cityName = ""
+    private lateinit var activityInstance : CityActivity
     private val locationListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
             if(automatic){
@@ -37,6 +39,7 @@ class CityFragment : Fragment() {
         override fun onProviderEnabled(provider: String) {}
         override fun onProviderDisabled(provider: String) {}
     }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -46,6 +49,38 @@ class CityFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        activityInstance = activity as CityActivity
+        plusButton.setOnClickListener {
+            searchView.showSearch()
+        }
+        minusButton.setOnClickListener {
+            activityInstance.removeCity(cityName, this)
+        }
+
+        searchView.setSuggestions(resources.getStringArray(R.array.query_suggestions));
+
+        searchView.setOnQueryTextListener(object : MaterialSearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String): Boolean {
+                activityInstance.addCity(query.toUpperCase())
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String): Boolean {
+                searchView.setSuggestions(arrayOf("Suggestion1", "Suggestion2" ))
+                return false
+            }
+        })
+
+        searchView.setOnSearchViewListener(object : MaterialSearchView.SearchViewListener {
+            override fun onSearchViewShown() {
+                searchView.showSuggestions()
+            }
+
+            override fun onSearchViewClosed() {
+                //Do some magic
+                searchView.hideKeyboard(searchView)
+            }
+        })
         if(automatic){
             updateLocation()
         }else {
@@ -113,6 +148,7 @@ class CityFragment : Fragment() {
 
         }
     }
+
 
     private fun updateLocation(){
         locationManager = activity?.getSystemService(Context.LOCATION_SERVICE) as LocationManager

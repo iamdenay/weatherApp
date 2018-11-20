@@ -28,21 +28,19 @@ import java.io.IOException
 class CityActivity : AppCompatActivity() {
     private var cityCount = 3
     private var cities :MutableSet<String> = mutableSetOf()
-    var currentCity = 1
     var fragmentList: MutableList<CityFragment> = mutableListOf()
     private lateinit var mPager: ViewPager
+    private lateinit var pagerAdapter: CityFragmentAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_city)
         val sharedPref = this.getPreferences(Context.MODE_PRIVATE)
-        cityCount = sharedPref.getInt("cityCount", 1)
-        cityCount = 3
         cities.addAll(sharedPref.getStringSet("cities", setOf()))
-        cities = mutableSetOf("Astana", "London", "Oslo")
         val fr = CityFragment()
         fragmentList.add(fr)
-        if(cityCount > 1){
+        Log.d("CITIES", cities.toString())
+        if(cities.count() > 0){
             for(city in cities){
                 val loc = getLocation(city)
                 if(loc != null){
@@ -55,7 +53,7 @@ class CityActivity : AppCompatActivity() {
         }
 
         mPager = findViewById(R.id.pager)
-        val pagerAdapter = CityFragmentAdapter(supportFragmentManager, fragmentList)
+        pagerAdapter = CityFragmentAdapter(supportFragmentManager, fragmentList)
         mPager.adapter = pagerAdapter
     }
 
@@ -94,17 +92,46 @@ class CityActivity : AppCompatActivity() {
         return location
     }
 
-    private fun addCity(city : String){
+    fun addCity(city : String){
         val sharedPref = this.getPreferences(Context.MODE_PRIVATE)
-        if(getLocation(city) != null){
+        val loc = getLocation(city)
+        if(loc != null){
+            Toast.makeText(this, "NOT NULL", Toast.LENGTH_SHORT).show()
             with (sharedPref.edit()) {
-                cities.add(city)
-                commit()
+                if(!cities.contains(city)){
+                    cities.add(city)
+                    putStringSet("cities", cities)
+                    apply()
+                    val fr = CityFragment()
+                    fr.setCity(loc, city)
+                    fragmentList.add(fr)
+                    pagerAdapter.notifyDataSetChanged()
+                }
             }
         }else{
+            Toast.makeText(this, "NULL", Toast.LENGTH_SHORT).show()
             Log.d("CITY", "No such location.")
         }
+    }
 
+    fun removeCity(city : String, fr:CityFragment){
+        val sharedPref = this.getPreferences(Context.MODE_PRIVATE)
+        val loc = getLocation(city)
+        if(loc != null){
+            Toast.makeText(this, "NOT NULL", Toast.LENGTH_SHORT).show()
+            with (sharedPref.edit()) {
+                if(cities.contains(city)){
+                    cities.remove(city)
+                    putStringSet("cities", cities)
+                    apply()
+                    fragmentList.remove(fr)
+                    pagerAdapter.notifyDataSetChanged()
+                }
+            }
+        }else{
+            Toast.makeText(this, "NULL", Toast.LENGTH_SHORT).show()
+            Log.d("CITY", "No such location.")
+        }
     }
 
     private inner class CityFragmentAdapter(fm: FragmentManager, fragmentList: MutableList<CityFragment>) : FragmentStatePagerAdapter(fm) {
