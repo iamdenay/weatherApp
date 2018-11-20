@@ -7,119 +7,109 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
+import android.os.Handler
 import android.support.v4.app.ActivityCompat
+import android.support.v4.app.Fragment
+import android.support.v4.app.FragmentManager
+import android.support.v4.app.FragmentStatePagerAdapter
 import android.support.v4.content.ContextCompat
+import android.support.v4.view.ViewPager
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_city.*
 import java.util.*
+import kotlin.collections.ArrayList
+import android.location.Geocoder
+import android.util.Log
+import java.io.IOException
 
 
 class CityActivity : AppCompatActivity() {
-    private lateinit var locationManager : LocationManager
-    private var latitude = 16.20
-    private var longitude = 33.34
-    private val locationListener = object : LocationListener {
-        override fun onLocationChanged(location: Location) {
-            this@CityActivity.latitude = location.latitude
-            this@CityActivity.longitude = location.longitude
-        }
-
-        override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {
-        }
-
-        override fun onProviderEnabled(provider: String) {
-        }
-
-        override fun onProviderDisabled(provider: String) {
-        }
-    }
+    private var cityCount = 3
+    private var cities :MutableSet<String> = mutableSetOf()
+    var currentCity = 1
+    var fragmentList: MutableList<CityFragment> = mutableListOf()
+    private lateinit var mPager: ViewPager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_city)
-        updateLocation()
-        val time = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        if(time in 6..17){
-            backgroundImageView.setBackgroundResource(R.drawable.sun)
-        }else {
-            backgroundImageView.setBackgroundResource(R.drawable.moon)
-        }
-    }
-
-    private fun makeRequest(latitude:Double, longitude:Double) {
-        val repo = Repository()
-        repo.getCurrentWeather(latitude, longitude, object : OnRepositoryReadyCallback {
-            override fun onDataReady(data: Result) {
-                val cityName = data.timezone.split("/")[1].replace("_"," ")
-                runOnUiThread {
-                    cityTextView.text = cityName
-                    val summary = data.daily[0].summary
-                    val min = data.daily[0].temperatureMin.toInt()
-                    val max = data.daily[0].temperatureMax.toInt()
-                    val cur = data.currently.temperature.toInt()
-                    val vis = when (data.daily[0].visibility){
-                        in 0..3 -> "Low visibility."
-                        in 4..6 -> "Average visibility."
-                        else -> "Good visibility."
-                    }
-                    summaryTextView.text = "$summary $vis Air temperature is $cur°, maximum $max° and minimum $min°."
-                    statusTextView.text = data.currently.summary
-                    tempTextView.text = "${cur}°"
-                    val viewAdapter = ForecastRecyclerViewAdapter(data.daily)
-                    val viewManager = LinearLayoutManager(this@CityActivity)
-                    recyclerView.apply {
-                        setHasFixedSize(true)
-                        layoutManager = viewManager
-                        adapter = viewAdapter
-                    }
+        val sharedPref = this.getPreferences(Context.MODE_PRIVATE)
+        cityCount = sharedPref.getInt("cityCount", 1)
+        cityCount = 3
+        cities.addAll(sharedPref.getStringSet("cities", setOf()))
+        cities = mutableSetOf("Astana", "London", "Oslo")
+        val fr = CityFragment()
+        fragmentList.add(fr)
+        if(cityCount > 1){
+            for(city in cities){
+                val loc = getLocation(city)
+                if(loc != null){
+                    val fr = CityFragment()
+                    fr.setCity(loc, city)
+                    fragmentList.add(fr)
                 }
-            }
-        })
-    }
 
-    private fun updateLocation(){
-        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.ACCESS_FINE_LOCATION)) {
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-            } else {
-                ActivityCompat.requestPermissions(this,
-                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
-            }
-        } else {
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0f,locationListener)
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0f,locationListener)
-            var loc = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-            if (loc != null) {
-                makeRequest(loc.latitude, loc.longitude)
-            } else {
-                loc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                if (loc != null) {
-                    makeRequest(loc.latitude, loc.longitude)
-                } else {
-                    // Pick city activity
-                }
             }
         }
+
+        mPager = findViewById(R.id.pager)
+        val pagerAdapter = CityFragmentAdapter(supportFragmentManager, fragmentList)
+        mPager.adapter = pagerAdapter
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        when (requestCode) {
-            1 -> {
-                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    updateLocation()
-                } else { }
+    private var doubleBackToExitPressedOnce = false
+    override fun onBackPressed() {
+        if (mPager.currentItem == 0) {
+            if (doubleBackToExitPressedOnce) {
+                super.onBackPressed()
                 return
             }
-            else -> { }
+            this.doubleBackToExitPressedOnce = true
+            Toast.makeText(this, "Please press BACK twice to exit", Toast.LENGTH_SHORT).show()
+        } else {
+            mPager.currentItem = mPager.currentItem - 1
         }
+
+        Handler().postDelayed(Runnable { doubleBackToExitPressedOnce = false }, 1000)
+    }
+
+    private fun getLocation(city : String) : Location?{
+        var location : Location? = null
+        if (Geocoder.isPresent()) {
+            try {
+                val gc = Geocoder(this)
+                val addresses = gc.getFromLocationName(city, 1)
+                if(!addresses.isEmpty()){
+                    location = Location("")
+                    location.latitude = addresses[0].latitude
+                    location.longitude = addresses[0].longitude
+                }
+            } catch (e: IOException) {
+                // handle the exception
+            }
+
+        }
+        return location
+    }
+
+    private fun addCity(city : String){
+        val sharedPref = this.getPreferences(Context.MODE_PRIVATE)
+        if(getLocation(city) != null){
+            with (sharedPref.edit()) {
+                cities.add(city)
+                commit()
+            }
+        }else{
+            Log.d("CITY", "No such location.")
+        }
+
+    }
+
+    private inner class CityFragmentAdapter(fm: FragmentManager, fragmentList: MutableList<CityFragment>) : FragmentStatePagerAdapter(fm) {
+        override fun getCount(): Int = fragmentList.count()
+
+        override fun getItem(position: Int): Fragment = fragmentList.get(position)
     }
 }
