@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">KotlinProject</string>
+    <string name="app_name">Foreteller</string>
     <string name="title_activity_scrolling">ScrollingActivity</string>
     <string name="preferences_key">weather_app_key</string>
     <string-array name="query_suggestions">

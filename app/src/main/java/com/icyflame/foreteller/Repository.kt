@@ -1,5 +1,5 @@
-package com.example.iamde.kotlinproject
-import com.example.iamde.kotlinproject.models.Result
+package com.icyflame.foreteller
+import com.icyflame.foreteller.models.Result
 import okhttp3.*
 import org.json.JSONException
 import java.io.IOException

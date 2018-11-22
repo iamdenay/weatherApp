@@ -1,4 +1,4 @@
-package com.example.iamde.kotlinproject
+package com.icyflame.foreteller
 
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import com.example.iamde.kotlinproject.models.Forecast
+import com.icyflame.foreteller.models.Forecast
 import kotlinx.android.synthetic.main.forecast_list_item.view.*
 import java.text.SimpleDateFormat
 import java.util.*

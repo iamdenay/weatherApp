@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.example.iamde.kotlinproject">
+          package="com.icyflame.foreteller">
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
@@ -24,6 +24,9 @@
         <meta-data
                 android:name="com.google.android.geo.API_KEY"
                 android:value="AIzaSyAnbcnEMYptMRnjFcxDsuYuxonGnAsXTfA"/>
+        <meta-data
+                android:name="com.google.android.gms.version"
+                android:value="@integer/google_play_services_version" />
     </application>
 
 </manifest>

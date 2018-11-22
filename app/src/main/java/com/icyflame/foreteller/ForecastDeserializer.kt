@@ -1,7 +1,7 @@
-package com.example.iamde.kotlinproject
+package com.icyflame.foreteller
 
-import com.example.iamde.kotlinproject.models.Forecast
-import com.example.iamde.kotlinproject.models.Result
+import com.icyflame.foreteller.models.Forecast
+import com.icyflame.foreteller.models.Result
 import com.google.gson.*
 import com.google.gson.reflect.TypeToken
 import java.lang.reflect.Type

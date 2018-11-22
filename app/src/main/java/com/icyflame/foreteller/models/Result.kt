@@ -1,4 +1,4 @@
-package com.example.iamde.kotlinproject.models
+package com.icyflame.foreteller.models
 
 data class Result(
     val latitude:Long,
