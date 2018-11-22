@@ -49,7 +49,7 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
             android:background="@color/transparent"
-            android:src="@drawable/icon_plus"
+            android:src="@drawable/icon_cross"
             app:layout_constraintBottom_toBottomOf="@+id/cityTextView"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@+id/cityTextView" />
@@ -111,13 +111,16 @@
                 app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/tempTextView" android:layout_marginTop="80dp"/>
 
-        <com.miguelcatalan.materialsearchview.MaterialSearchView
-            android:id="@+id/searchView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:theme="@style/searchViewStyle"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+        <FrameLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+            <com.miguelcatalan.materialsearchview.MaterialSearchView
+                    android:id="@+id/searchView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:theme="@style/searchViewStyle"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+        </FrameLayout>
+
     </android.support.constraint.ConstraintLayout>
 </android.support.v4.widget.NestedScrollView>

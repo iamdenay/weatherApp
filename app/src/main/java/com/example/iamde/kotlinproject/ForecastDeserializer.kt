@@ -1,5 +1,7 @@
 package com.example.iamde.kotlinproject
 
+import com.example.iamde.kotlinproject.models.Forecast
+import com.example.iamde.kotlinproject.models.Result
 import com.google.gson.*
 import com.google.gson.reflect.TypeToken
 import java.lang.reflect.Type

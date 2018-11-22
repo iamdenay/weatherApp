@@ -1,15 +1,13 @@
 package com.example.iamde.kotlinproject
 
-import android.annotation.SuppressLint
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import kotlinx.android.synthetic.main.activity_city.view.*
+import com.example.iamde.kotlinproject.models.Forecast
 import kotlinx.android.synthetic.main.forecast_list_item.view.*
-import org.w3c.dom.Text
 import java.text.SimpleDateFormat
 import java.util.*
 

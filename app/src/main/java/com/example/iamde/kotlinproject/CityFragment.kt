@@ -2,6 +2,7 @@ package com.example.iamde.kotlinproject
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Typeface
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
@@ -17,9 +18,18 @@ import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_city.*
 import java.util.*
 import android.location.Geocoder
+import android.os.Handler
+import android.text.style.StyleSpan
+import com.example.iamde.kotlinproject.models.Forecast
+import com.example.iamde.kotlinproject.models.Result
+import com.google.android.gms.common.api.GoogleApiClient
+import com.google.android.gms.common.api.ResultCallback
+import com.google.android.gms.common.api.Status
+import com.google.android.gms.location.places.AutocompleteFilter
+import com.google.android.gms.location.places.AutocompletePredictionBuffer
+import com.google.android.gms.location.places.Places
 import java.io.IOException
 import com.miguelcatalan.materialsearchview.MaterialSearchView
-import com.example.iamde.kotlinproject.R.id.searchView
 
 class CityFragment : Fragment() {
     private lateinit var locationManager : LocationManager
@@ -28,6 +38,9 @@ class CityFragment : Fragment() {
     private var longitude = 33.34
     private var cityName = ""
     private lateinit var activityInstance : CityActivity
+    private lateinit var googleApiClient : GoogleApiClient
+    private lateinit var builder: AutocompleteFilter.Builder
+    private val STYLE_BOLD = StyleSpan(Typeface.BOLD)
     private val locationListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
             if(automatic){
@@ -50,6 +63,12 @@ class CityFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         activityInstance = activity as CityActivity
+        googleApiClient = GoogleApiClient.Builder(activityInstance)
+            .addApi(Places.GEO_DATA_API)
+            .build()
+        googleApiClient.connect()
+        builder =  AutocompleteFilter.Builder()
+            .setTypeFilter(AutocompleteFilter.TYPE_FILTER_CITIES)
         plusButton.setOnClickListener {
             searchView.showSearch()
         }
@@ -57,16 +76,30 @@ class CityFragment : Fragment() {
             activityInstance.removeCity(cityName, this)
         }
 
-        searchView.setSuggestions(resources.getStringArray(R.array.query_suggestions));
-
         searchView.setOnQueryTextListener(object : MaterialSearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String): Boolean {
-                activityInstance.addCity(query.toUpperCase())
                 return false
             }
 
             override fun onQueryTextChange(newText: String): Boolean {
-                searchView.setSuggestions(arrayOf("Suggestion1", "Suggestion2" ))
+                val cities : MutableList<String> = mutableListOf()
+                val result = Places
+                    .GeoDataApi
+                    .getAutocompletePredictions(googleApiClient, newText, null, builder.build())
+                result.setResultCallback {
+                    val status = it.status
+                    val handler = Handler()
+                    val size = it.count
+                    if (status.isSuccess){
+                        for (i in 0 until size){
+                            cities.add(it[i].getFullText(STYLE_BOLD).toString())
+                            Log.d("PLACE", it[i].getFullText(STYLE_BOLD).toString())
+                            searchView.setSuggestions(cities.toTypedArray())
+                            searchView.showSuggestions()
+                        }
+                    }
+                }
+
                 return false
             }
         })
@@ -77,11 +110,11 @@ class CityFragment : Fragment() {
             }
 
             override fun onSearchViewClosed() {
-                //Do some magic
                 searchView.hideKeyboard(searchView)
             }
         })
         if(automatic){
+            minusButton.visibility = View.GONE
             updateLocation()
         }else {
             makeRequest(latitude, longitude)
@@ -127,11 +160,11 @@ class CityFragment : Fragment() {
         })
     }
 
-    fun setCity(loc : Location, city : String){
+    fun setCity(lat : Double, lon: Double, city : String){
         automatic = false
         cityName = city
-        latitude = loc.latitude
-        longitude = loc.longitude
+        latitude = lat
+        longitude = lon
     }
 
     private fun getCity(lat : Double, lon: Double){

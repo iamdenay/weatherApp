@@ -1,14 +1,5 @@
-package com.example.iamde.kotlinproject
+package com.example.iamde.kotlinproject.models
 
-import com.google.gson.annotations.SerializedName
-
-data class Result(
-    val latitude:Long,
-    val longitude:Long,
-    val timezone:String,
-    val currently:Forecast,
-    val hourly:List<Forecast>,
-    val daily:List<Forecast>)
 
 data class Forecast(val time:Long,
                    val summary:String,

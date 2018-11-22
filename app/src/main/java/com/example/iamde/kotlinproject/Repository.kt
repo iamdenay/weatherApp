@@ -1,16 +1,11 @@
 package com.example.iamde.kotlinproject
-import android.support.annotation.UiThread
-import android.util.Log
+import com.example.iamde.kotlinproject.models.Result
 import okhttp3.*
 import org.json.JSONException
 import java.io.IOException
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.google.gson.JsonDeserializer
-import com.google.gson.reflect.TypeToken
 import okhttp3.HttpUrl
-import org.json.JSONObject
-
 
 
 interface OnRepositoryReadyCallback {
@@ -27,7 +22,7 @@ class Repository {
         val urlBuilder = HttpUrl.parse("$url$key/$lat,$long")!!.newBuilder()
         urlBuilder.addQueryParameter("units", "si")
         val query = urlBuilder.build().toString()
-        val request = Request.Builder().url(query).build()
+        val request = Request.Builder().url(query) .build()
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {}
